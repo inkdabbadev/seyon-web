@@ -1,0 +1,60 @@
+/* Self-hosted fonts — no network required */
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/700.css';
+@import '@fontsource/manrope/400.css';
+@import '@fontsource/manrope/700.css';
+@import '@fontsource/manrope/800.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-inter: 'Inter', sans-serif;
+  --font-manrope: 'Manrope', sans-serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply font-sans tracking-tight text-ss-black bg-ss-white;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display tracking-tight leading-none;
+  }
+
+  ::selection {
+    background: #000;
+    color: #EE7037;
+  }
+}
+
+@layer utilities {
+  .label {
+    @apply text-xs font-bold tracking-widest uppercase;
+  }
+
+  .rule {
+    @apply border-t border-ss-border;
+  }
+
+  .hide-scroll {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .hide-scroll::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: #F0EEE2; }
+::-webkit-scrollbar-thumb { background: #E54A63; border-radius: 99px; }
