@@ -1,25 +1,16 @@
 "use server";
 
-import fs from "fs";
-import path from "path";
+// NOTE: fs.readdirSync does NOT work on Vercel — the public/ folder is served
+// via CDN and is not present in the serverless Lambda filesystem.
+// Banner paths are declared statically here instead.
+// To add a new banner: upload to /public/image/banner/ and add the path below.
 
-export async function getBanners() {
-  try {
-    const dir = path.join(process.cwd(), "public/image/banner");
-    if (!fs.existsSync(dir)) {
-      return [];
-    }
+const BANNERS: string[] = [
+  "/image/banner/Banner%20(1).jpeg",
+  "/image/banner/Banner%20(2).jpeg",
+  "/image/banner/Banner%20(3).jpeg",
+];
 
-    const files = fs.readdirSync(dir);
-
-    const validFiles = files.filter(file =>
-      /\.(jpg|jpeg|png|webp|mp4)$/i.test(file)
-    );
-
-    // Encode spaces so Vercel CDN serves the URLs correctly
-    return validFiles.map(file => `/image/banner/${file.replace(/ /g, "%20")}`);
-  } catch (error) {
-    console.error("Error reading banner images:", error);
-    return [];
-  }
+export async function getBanners(): Promise<string[]> {
+  return BANNERS;
 }

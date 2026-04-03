@@ -1,7 +1,10 @@
 "use server";
 
-import fs from "fs";
-import path from "path";
+// NOTE: fs.readdirSync does NOT work on Vercel — the public/ folder is served
+// via CDN and is not present in the serverless Lambda filesystem.
+// All projects are declared statically here instead.
+// To add a new project: upload the image to /public/image/<folder>/ and add
+// an entry to the PROJECTS array below.
 
 type Cat = "All" | "Social Media" | "Banners" | "Logos" | "Packaging";
 
@@ -14,62 +17,31 @@ export interface Project {
   img: string;
 }
 
-// Keyed by unencoded path (matches raw filename from fs) for lookup,
-// but the final `img` value will use %20-encoded paths for Vercel CDN.
-const PREDEFINED: Record<string, Partial<Project>> = {
-  "/image/poster/Poster (1).jpeg": { title: "Fantastic Friday",    client: "The Cycle Gap",   tags: ["#poster", "#event", "#nightlife"] },
-  "/image/poster/Poster (2).jpeg": { title: "Event Night",         client: "The Cycle Gap",   tags: ["#poster", "#socialmedia"] },
-  "/image/poster/Poster (3).jpeg": { title: "Weekend Special",     client: "Brand Campaign",  tags: ["#poster", "#promotion"] },
-  "/image/poster/Poster (4).jpeg": { title: "Offer Post",          client: "Brand Campaign",  tags: ["#socialmedia", "#offer"] },
-  "/image/poster/Poster (5).jpeg": { title: "Brand Campaign",      client: "Retail Client",   tags: ["#socialmedia", "#branding"] },
-  "/image/logo/Wild Flour Mockup.jpg":          { title: "Wild Flour",        client: "Wild Flour",      tags: ["#logo", "#branding", "#packaging"] },
-  "/image/logo/Zen Enterprises Logo-04.jpg":    { title: "Zen Enterprises",   client: "Zen Enterprises", tags: ["#logo", "#identity", "#branding"] },
-  "/image/logo/Conectr.png":                    { title: "Conectr",            client: "Conectr",         tags: ["#logo", "#tech", "#startup"] },
-  "/image/label/Agni Masala Branding-12.jpg":   { title: "Agni Masala Brand", client: "Agni Masala",     tags: ["#packaging", "#label", "#branding"] },
-  "/image/label/Agni Masala Branding-16.jpg":   { title: "Agni Masala Series",client: "Agni Masala",     tags: ["#packaging", "#label"] },
-  "/image/label/Plumoeasy Mockup-1.jpg":        { title: "Plumoeasy",         client: "Plumoeasy",       tags: ["#packaging", "#mockup", "#label"] },
-};
+const PROJECTS: Project[] = [
+  // ── Social Media ──────────────────────────────────────────────────────────
+  { id: "p01", title: "Fantastic Friday",   client: "The Cycle Gap",  cat: "Social Media", tags: ["#poster", "#event", "#nightlife"], img: "/image/poster/Poster%20(1).jpeg" },
+  { id: "p02", title: "Event Night",        client: "The Cycle Gap",  cat: "Social Media", tags: ["#poster", "#socialmedia"],        img: "/image/poster/Poster%20(2).jpeg" },
+  { id: "p03", title: "Weekend Special",    client: "Brand Campaign", cat: "Social Media", tags: ["#poster", "#promotion"],          img: "/image/poster/Poster%20(3).jpeg" },
+  { id: "p04", title: "Offer Post",         client: "Brand Campaign", cat: "Social Media", tags: ["#socialmedia", "#offer"],         img: "/image/poster/Poster%20(4).jpeg" },
+  { id: "p05", title: "Brand Campaign",     client: "Retail Client",  cat: "Social Media", tags: ["#socialmedia", "#branding"],      img: "/image/poster/Poster%20(5).jpeg" },
+
+  // ── Banners ───────────────────────────────────────────────────────────────
+  { id: "b01", title: "Baking Essentials",  client: "E-Commerce",     cat: "Banners",      tags: ["#banner", "#ecommerce", "#food"], img: "/image/banner/Banner%20(1).jpeg" },
+  { id: "b02", title: "Product Banner",     client: "Online Store",   cat: "Banners",      tags: ["#banner", "#product"],            img: "/image/banner/Banner%20(2).jpeg" },
+  { id: "b03", title: "Sale Banner",        client: "Retail Brand",   cat: "Banners",      tags: ["#banner", "#sale", "#ecommerce"], img: "/image/banner/Banner%20(3).jpeg" },
+
+  // ── Logos ─────────────────────────────────────────────────────────────────
+  { id: "l01", title: "Wild Flour",         client: "Wild Flour",       cat: "Logos",      tags: ["#logo", "#branding", "#packaging"], img: "/image/logo/Wild%20Flour%20Mockup.jpg" },
+  { id: "l02", title: "Zen Enterprises",    client: "Zen Enterprises",  cat: "Logos",      tags: ["#logo", "#identity", "#branding"],  img: "/image/logo/Zen%20Enterprises%20Logo-04.jpg" },
+  { id: "l03", title: "Conectr",            client: "Conectr",          cat: "Logos",      tags: ["#logo", "#tech", "#startup"],       img: "/image/logo/Conectr.png" },
+
+  // ── Packaging ─────────────────────────────────────────────────────────────
+  { id: "k01", title: "Agni Masala Brand",  client: "Agni Masala",    cat: "Packaging",    tags: ["#packaging", "#label", "#branding"], img: "/image/label/Agni%20Masala%20Branding-12.jpg" },
+  { id: "k02", title: "Agni Masala Series", client: "Agni Masala",    cat: "Packaging",    tags: ["#packaging", "#label"],              img: "/image/label/Agni%20Masala%20Branding-16.jpg" },
+  { id: "k03", title: "Plumoeasy",          client: "Plumoeasy",      cat: "Packaging",    tags: ["#packaging", "#mockup", "#label"],   img: "/image/label/Plumoeasy%20Mockup-1.jpg" },
+];
 
 export async function getDynamicWorkProjects(): Promise<Project[]> {
-  const categoriesToScan = [
-    { folder: "poster", cat: "Social Media" as Cat, defaultTags: ["#social", "#poster"],     defaultTitle: "Social Media Campaign" },
-    { folder: "logo",   cat: "Logos"        as Cat, defaultTags: ["#logo", "#branding"],     defaultTitle: "Brand Identity" },
-    { folder: "label",  cat: "Packaging"    as Cat, defaultTags: ["#packaging", "#label"],   defaultTitle: "Packaging Design" },
-    { folder: "banner", cat: "Banners"      as Cat, defaultTags: ["#banner", "#digital"],    defaultTitle: "Digital Banner" },
-  ];
-
-  const allProjects: Project[] = [];
-
-  for (const group of categoriesToScan) {
-    const dir = path.join(process.cwd(), "public/image", group.folder);
-    try {
-      if (!fs.existsSync(dir)) continue;
-
-      const files = fs.readdirSync(dir);
-      for (const file of files) {
-        if (!/\.(jpg|jpeg|png|webp|gif|svg)$/i.test(file)) continue;
-
-        // Unencoded key → looks up metadata in PREDEFINED
-        const lookupKey = `/image/${group.folder}/${file}`;
-        // %20-encoded URL → safe for Vercel CDN and browser
-        const imgPath   = `/image/${group.folder}/${file.replace(/ /g, "%20")}`;
-
-        const predefined = PREDEFINED[lookupKey] ?? {};
-        const id = file.replace(/\.[^/.]+$/, "").replace(/\s+/g, "-").toLowerCase();
-
-        allProjects.push({
-          id,
-          title:  predefined.title  ?? group.defaultTitle,
-          client: predefined.client ?? "Seyon Archive",
-          cat:    group.cat,
-          tags:   predefined.tags   ?? group.defaultTags,
-          img:    imgPath,
-        });
-      }
-    } catch (error) {
-      console.error(`Error reading ${group.folder} directory:`, error);
-    }
-  }
-
-  return allProjects.sort(() => Math.random() - 0.5);
+  // Shuffle on every call to keep the archive feel
+  return [...PROJECTS].sort(() => Math.random() - 0.5);
 }
