@@ -1,16 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Disable telemetry reaching out during build
-  // (also set NEXT_TELEMETRY_DISABLED=1 in your env / CI)
-
+  // Image optimisation is ON (default).
+  // Vercel handles this for free — images are auto-converted to WebP/AVIF,
+  // resized to the requested size, and cached on the CDN edge.
+  // This is the biggest single performance win for an image-heavy site.
   images: {
-    // Keep unoptimized so the site works on any static host / local IP preview.
-    // Switch to `unoptimized: false` if you deploy to Vercel or a Node server
-    // that supports Next.js image optimisation.
-    unoptimized: true,
+    formats: ["image/avif", "image/webp"],
+    // Allow any image sourced from the same origin (local /public folder)
+    remotePatterns: [],
   },
 
-  // Silence the "use client" / "use server" boundary warnings in production logs
   logging: {
     fetches: {
       fullUrl: false,
