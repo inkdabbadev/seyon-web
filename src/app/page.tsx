@@ -26,9 +26,8 @@ const SECTIONS = [
   { id: "offerings", label: "04. Your Story" },
 ];
 
-export default function Home() {
+function WalkthroughTracker() {
   const [activeSection, setActiveSection] = useState(0);
-  const [galleryFilter, setGalleryFilter] = useState("all");
 
   useEffect(() => {
     const ob = new IntersectionObserver((entries) => {
@@ -51,6 +50,30 @@ export default function Home() {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   }
 
+  return (
+    <div className="fixed left-6 lg:left-12 top-1/2 -translate-[50%] z-[60] hidden xl:flex flex-col gap-6 mix-blend-difference pointer-events-none">
+      {SECTIONS.map((sec, i) => (
+        <button 
+          key={sec.id}
+          onClick={() => scrollTo(sec.id)}
+          className={`pointer-events-auto flex items-center gap-4 text-xs font-bold tracking-[0.2em] uppercase transition-all duration-300 origin-left text-left ${activeSection === i ? "opacity-100 scale-110 text-ss-pink" : "opacity-30 hover:opacity-70 text-white"}`}
+        >
+          <span>{String(i + 1).padStart(2, '0')}</span>
+          <div className={`transition-all duration-300 h-[2px] ${activeSection === i ? "w-8 bg-ss-pink" : "w-0 bg-white"}`} />
+          {activeSection === i && <span>{sec.label.split('.')[1]}</span>}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export default function Home() {
+  const [galleryFilter, setGalleryFilter] = useState("all");
+
+  const scrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+  }
+
   // Scroll logic for The Forge parallax
   const forgeRef = useRef(null);
   const { scrollYProgress: forgeProgress } = useScroll({ target: forgeRef, offset: ["start end", "end start"] });
@@ -62,19 +85,7 @@ export default function Home() {
     <div className="bg-ss-black text-ss-white selection:bg-ss-pink selection:text-white overflow-hidden">
       
       {/* ── Sticky Walkthrough Tracker ── */}
-      <div className="fixed left-6 lg:left-12 top-1/2 -translate-[50%] z-[60] hidden xl:flex flex-col gap-6 mix-blend-difference pointer-events-none">
-        {SECTIONS.map((sec, i) => (
-          <button 
-            key={sec.id}
-            onClick={() => scrollTo(sec.id)}
-            className={`pointer-events-auto flex items-center gap-4 text-xs font-bold tracking-[0.2em] uppercase transition-all duration-300 origin-left text-left ${activeSection === i ? "opacity-100 scale-110 text-ss-pink" : "opacity-30 hover:opacity-70 text-white"}`}
-          >
-            <span>{String(i + 1).padStart(2, '0')}</span>
-            <div className={`transition-all duration-300 h-[2px] ${activeSection === i ? "w-8 bg-ss-pink" : "w-0 bg-white"}`} />
-            {activeSection === i && <span>{sec.label.split('.')[1]}</span>}
-          </button>
-        ))}
-      </div>
+      <WalkthroughTracker />
 
       {/* ── 1. CHAPTER 1: THE SPARK ── */}
       <section id="hero" className="min-h-[100svh] flex flex-col justify-center relative border-b border-white/10">
@@ -82,9 +93,11 @@ export default function Home() {
         {/* Abstract background elements signifying raw ideas */}
         <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
           <motion.div 
+             style={{ willChange: "transform" }}
              animate={{ rotate: 360 }} transition={{ duration: 100, repeat: Infinity, ease: "linear" }}
              className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full border-[1px] border-dashed border-white/30" />
           <motion.div 
+             style={{ willChange: "transform" }}
              animate={{ rotate: -360 }} transition={{ duration: 80, repeat: Infinity, ease: "linear" }}
              className="absolute top-[30%] -right-[20%] w-[60vw] h-[60vw] rounded-full border-[1px] border-white/20" />
         </div>
@@ -122,11 +135,11 @@ export default function Home() {
       <section id="reel" ref={forgeRef} className="min-h-[120svh] relative flex flex-col justify-center border-b border-white/10 py-32 overflow-hidden">
         
         {/* Floating background image fragments representing the "Forge" */}
-        <motion.div style={{ y: yImage1, rotate: rotateImage1 }} className="absolute right-[10%] top-[10%] w-[30vw] aspect-[3/4] opacity-30 mix-blend-screen pointer-events-none z-0">
-           <Image src="/image/logo/Wild%20Flour%20Mockup.jpg" alt="" fill className="object-cover grayscale brightness-150" />
+        <motion.div style={{ y: yImage1, rotate: rotateImage1, willChange: "transform" }} className="absolute right-[10%] top-[10%] w-[30vw] aspect-[3/4] opacity-30 pointer-events-none z-0 grayscale contrast-125 brightness-150">
+           <Image src="/image/logo/Wild%20Flour%20Mockup.jpg" alt="" fill quality={60} sizes="(max-width: 1200px) 50vw, 30vw" className="object-cover" />
         </motion.div>
-        <motion.div style={{ y: yImage2 }} className="absolute left-[5%] bottom-[10%] w-[20vw] aspect-square opacity-20 mix-blend-screen pointer-events-none z-0">
-           <Image src="/image/poster/Poster%20(5).jpeg" alt="" fill className="object-cover grayscale brightness-200" />
+        <motion.div style={{ y: yImage2, willChange: "transform" }} className="absolute left-[5%] bottom-[10%] w-[20vw] aspect-square opacity-20 pointer-events-none z-0 grayscale contrast-125 brightness-150">
+           <Image src="/image/poster/Poster%20(5).jpeg" alt="" fill quality={60} sizes="(max-width: 1200px) 50vw, 20vw" className="object-cover" />
         </motion.div>
 
         <div className="max-w-7xl mx-auto px-6 xl:pl-48 lg:px-12 w-full relative z-10 flex flex-col items-center">
@@ -141,7 +154,7 @@ export default function Home() {
                </h2>
                
                <div className="w-full aspect-video bg-ss-border relative overflow-hidden rounded-[2rem] group cursor-pointer shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-                  <Image src="/image/poster/Poster%20(1).jpeg" alt="Showreel" fill className="object-cover opacity-50 group-hover:opacity-80 transition-opacity duration-700 group-hover:scale-105" />
+                  <Image src="/image/poster/Poster%20(1).jpeg" alt="Showreel" fill quality={75} loading="lazy" sizes="(max-width: 768px) 100vw, 80vw" className="object-cover opacity-50 group-hover:opacity-80 transition-opacity duration-700 group-hover:scale-105" />
                   <div className="absolute inset-0 flex items-center justify-center">
                      <div className="w-24 h-24 rounded-full border border-white/30 bg-black/40 backdrop-blur-md flex items-center justify-center font-bold uppercase tracking-widest text-xs group-hover:bg-ss-orange group-hover:text-black group-hover:border-ss-orange transition-all duration-500 hover:scale-110">
                         Play
@@ -199,15 +212,11 @@ export default function Home() {
                  initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6, delay: i * 0.1 }}
               >
                 <Link href="/work" className="group block relative">
-                  <div className="w-full aspect-[4/5] overflow-hidden bg-white/5 rounded-[2rem] relative border border-white/5">
-                    <Image src={p.img} alt={p.title} width={800} height={1000} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 mix-blend-luminosity hover:mix-blend-normal" />
+                  <div className="w-full aspect-[4/5] overflow-hidden bg-white/5 rounded-[2rem] relative border border-white/5 grayscale group-hover:grayscale-0 transition-all duration-700">
+                    <Image src={p.img} alt={p.title} fill quality={75} loading="lazy" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                     
                     {/* Hover micro-narrative */}
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center p-8 text-center backdrop-blur-sm">
-                       <p className="font-bold text-xl italic drop-shadow-xl text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                         "We made them look 10x bigger."
-                       </p>
-                    </div>
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
                   </div>
                   <div className="mt-8 flex justify-between items-start pl-2">
                     <div>
@@ -262,7 +271,7 @@ export default function Home() {
              initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}
              className="bg-ss-light rounded-3xl p-10 lg:p-16 border border-ss-border/10 shadow-2xl relative overflow-hidden group"
           >
-            <div className="absolute top-0 right-0 w-64 h-64 bg-ss-pink/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-ss-pink/20 transition-colors duration-1000"></div>
+            <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-ss-pink/5 to-transparent rounded-full -translate-y-1/2 translate-x-1/2 group-hover:from-ss-pink/10 transition-colors duration-1000"></div>
             <h2 className="text-[2.5rem] md:text-[4rem] font-black uppercase tracking-tighter leading-[1] mb-10">
               What are you <br/>building?
             </h2>
